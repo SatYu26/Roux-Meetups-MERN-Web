@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const cookieSession = require('cookie-session');
+const createError = require('http-errors');
 
 const routes = require('./routes');
 const FeedbackService = require('./services/FeedbackService');
@@ -47,6 +48,21 @@ app.use(
     speakersService,
   })
 );
+
+app.use((req, res, next) => {
+  const errorMessage = next(createError(404, 'File not found'));
+  return errorMessage;
+});
+
+// As per express convention the middleware that takes 4 arguments is the error handling middleware.
+app.use((err, req, res, next) => {
+  res.locals.message = err.message;
+  console.error(err);
+  const status = err.status || 500;
+  res.locals.status = status;
+  res.status(status);
+  res.render('error');
+});
 
 app.listen(port, () => {
   console.log(`Express Server listning on port ${port}`);
